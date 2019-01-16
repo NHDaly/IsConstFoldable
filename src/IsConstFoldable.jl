@@ -7,7 +7,7 @@ export @is_const_foldable
 
 """
     @is_const_foldable foo(1, 2)
-    
+
 A macro which will return true if we are *sure* that an expression const-folds, and false
 otherwise. Note that there may be false negatives (because LLVM does its own optimization
 passes), but there should not be false positives.
@@ -30,7 +30,11 @@ macro is_const_foldable(expr)
             # If the code is only a single line long, we can assume it's const-folded
             # These would be lines of the type :(return 0)
             codeinfo = ($InteractiveUtils.@code_typed wrapper())[1]
-            length(codeinfo.code) == 1 && return true
+            if length(codeinfo.code) == 1
+                # Ensure that the statement is a return line of some kind
+                # (This also works for empty functions)
+                codeinfo.code[end].head == :return && return true
+            end
 
             # Otherwise, we check which SSA value it's returning, and check that the type
             # is marked as a Compiler.Const.
@@ -41,8 +45,8 @@ macro is_const_foldable(expr)
                 if codeinfo.ssavaluetypes[rv.id] isa Core.Compiler.Const
                     return true
                 end
-                return false
             end
+            return false
         end
         _test_wrapper()
     end
