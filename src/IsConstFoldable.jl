@@ -25,27 +25,20 @@ You can use this within a Unit Test, e.g.:
 """
 macro is_const_foldable(expr)
     return quote
+        # We embed the expr in a wrapper() function, which ensures that during compliation
+        # and optimization, the optimizer has access to all static constants provided.
         function wrapper() $(esc(expr)) end
         function _test_wrapper()
-            # If the code is only a single line long, we can assume it's const-folded
-            # These would be lines of the type :(return 0)
+            # If the code in wrapper() is reduced to only a single return statement, then
+            # the logic in `expr` has been const-folded away.
+            # This single return statment would be something like this: `:(return 0)`
             codeinfo = ($InteractiveUtils.@code_typed wrapper())[1]
             if length(codeinfo.code) == 1
                 # Ensure that the statement is a return line of some kind
                 # (This also works for empty functions)
                 codeinfo.code[end].head == :return && return true
             end
-
-            # Otherwise, we check which SSA value it's returning, and check that the type
-            # is marked as a Compiler.Const.
-            # This would be e.g. :(%1 = (0, 0)::Core.Compiler.Const((0, 0); return %1)
-            codeinfo = ($InteractiveUtils.@code_typed optimize=false wrapper())[1]
-            @match Expr(:return, [rv]) = codeinfo.code[end]
-            if rv isa Core.SSAValue
-                if codeinfo.ssavaluetypes[rv.id] isa Core.Compiler.Const
-                    return true
-                end
-            end
+            # Otherwise, the optimizer was not able to eliminate the entirety of the operation.
             return false
         end
         _test_wrapper()
