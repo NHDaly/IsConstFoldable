@@ -1,4 +1,4 @@
-using Tests
+using Test
 using IsConstFoldable
 
 # Tests that the Util.@is_const_foldable macro actually works
@@ -20,3 +20,10 @@ using IsConstFoldable
         @test !foo(x)
     end
 end
+
+
+@generated function f(x)
+    return :(typemax(x))
+end
+
+@is_const_foldable f(Int)
