@@ -1,5 +1,7 @@
 # @is_const_foldable
 
+**NOTE: This package is extremely experimental, and very likely just doesn't work! This is exploratory work.**
+
 A macro which will return true if we are *sure* that an expression const-folds, and false
 otherwise. Note that there may be false negatives (because LLVM does its own optimization
 passes), but there should not be false positives.
