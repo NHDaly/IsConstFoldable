@@ -8,7 +8,9 @@ Note that it tests this by checking the @code_typed of a helper function whose b
 expression, allowing the optimizer the chance to fold away the logic with awareness of the
 context of being called with Const inputs.
 
-You can use this within a Unit Test, e.g.:
+You can use this within a Unit Test, to check if a function will const-fold for a given input.
+
+## Example:
 
 ```julia
 @test @is_const_foldable zero(Int)
